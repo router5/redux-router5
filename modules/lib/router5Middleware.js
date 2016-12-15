@@ -23,7 +23,7 @@ const router5ReduxMiddleware = router =>
                     break;
 
                 case actionTypes.CAN_ACTIVATE:
-                    router.canActivate(action.payload.name, action.payload.canDeactivate);
+                    router.canActivate(action.payload.name, action.payload.canActivate);
                     break;
 
                 default:
