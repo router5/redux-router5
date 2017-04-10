@@ -63,6 +63,13 @@ describe('redux-router5', () => {
             getState: () => new State()
         }];
 
+        const unifiedEqual = (result, expectation) => {
+            if (typeof result.toJS === 'function') {
+                return expect(result.toJS()).to.eql(expectation);
+            } 
+            return expect(result).to.equal(expectation);
+        };
+
         types.forEach((type) => {
 
             let state;
@@ -71,7 +78,7 @@ describe('redux-router5', () => {
 
             it(`[${type.name}] should handle transitionStart actions`, () => {
                 state = type.reducer(state, actions.transitionStart(route2, route1));
-                expect(state.transitionRoute).to.equal(route2);
+                unifiedEqual(state.transitionRoute, route2);
                 expect(state.transitionError).to.equal(null);
             });
 
@@ -79,12 +86,12 @@ describe('redux-router5', () => {
                 state = type.reducer(state, actions.transitionSuccess(route2, route1));
                 expect(state.transitionRoute).to.equal(null);
                 expect(state.transitionError).to.equal(null);
-                expect(state.route).to.equal(route2);
+                unifiedEqual(state.route, route2);
             });
 
             it(`[${type.name}] should handle transitionError actions`, () => {
                 state = type.reducer(state, actions.transitionError(route2, route1, 'ERR'));
-                expect(state.transitionRoute).to.equal(route2);
+                unifiedEqual(state.transitionRoute, route2);
                 expect(state.transitionError).to.equal('ERR');
             });
 

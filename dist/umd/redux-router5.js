@@ -25,8 +25,8 @@ var actionTypes = Object.freeze({
   });
 
   function navigateTo(name) {
-      var params = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-      var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+      var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       return {
           type: NAVIGATE_TO,
@@ -143,10 +143,10 @@ var actions = Object.freeze({
               return function (action) {
                   switch (action.type) {
                       case NAVIGATE_TO:
-                          var _action$payload = action.payload;
-                          var name = _action$payload.name;
-                          var params = _action$payload.params;
-                          var opts = _action$payload.opts;
+                          var _action$payload = action.payload,
+                              name = _action$payload.name,
+                              params = _action$payload.params,
+                              opts = _action$payload.opts;
 
                           router.navigate(name, params, opts);
                           break;
@@ -174,8 +174,121 @@ var actions = Object.freeze({
   var typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
   } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
+
+  var asyncGenerator = function () {
+    function AwaitValue(value) {
+      this.value = value;
+    }
+
+    function AsyncGenerator(gen) {
+      var front, back;
+
+      function send(key, arg) {
+        return new Promise(function (resolve, reject) {
+          var request = {
+            key: key,
+            arg: arg,
+            resolve: resolve,
+            reject: reject,
+            next: null
+          };
+
+          if (back) {
+            back = back.next = request;
+          } else {
+            front = back = request;
+            resume(key, arg);
+          }
+        });
+      }
+
+      function resume(key, arg) {
+        try {
+          var result = gen[key](arg);
+          var value = result.value;
+
+          if (value instanceof AwaitValue) {
+            Promise.resolve(value.value).then(function (arg) {
+              resume("next", arg);
+            }, function (arg) {
+              resume("throw", arg);
+            });
+          } else {
+            settle(result.done ? "return" : "normal", result.value);
+          }
+        } catch (err) {
+          settle("throw", err);
+        }
+      }
+
+      function settle(type, value) {
+        switch (type) {
+          case "return":
+            front.resolve({
+              value: value,
+              done: true
+            });
+            break;
+
+          case "throw":
+            front.reject(value);
+            break;
+
+          default:
+            front.resolve({
+              value: value,
+              done: false
+            });
+            break;
+        }
+
+        front = front.next;
+
+        if (front) {
+          resume(front.key, front.arg);
+        } else {
+          back = null;
+        }
+      }
+
+      this._invoke = send;
+
+      if (typeof gen.return !== "function") {
+        this.return = undefined;
+      }
+    }
+
+    if (typeof Symbol === "function" && Symbol.asyncIterator) {
+      AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
+        return this;
+      };
+    }
+
+    AsyncGenerator.prototype.next = function (arg) {
+      return this._invoke("next", arg);
+    };
+
+    AsyncGenerator.prototype.throw = function (arg) {
+      return this._invoke("throw", arg);
+    };
+
+    AsyncGenerator.prototype.return = function (arg) {
+      return this._invoke("return", arg);
+    };
+
+    return {
+      wrap: function (fn) {
+        return function () {
+          return new AsyncGenerator(fn.apply(this, arguments));
+        };
+      },
+      await: function (value) {
+        return new AwaitValue(value);
+      }
+    };
+  }();
 
   var _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
@@ -199,7 +312,7 @@ var actions = Object.freeze({
   };
 
   function router5Reducer() {
-      var state = arguments.length <= 0 || arguments[0] === undefined ? initialState : arguments[0];
+      var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
       var action = arguments[1];
 
       switch (action.type) {
@@ -329,7 +442,7 @@ var actions = Object.freeze({
   }
 
   function routeNodeSelector(routeNode) {
-      var reducerKey = arguments.length <= 1 || arguments[1] === undefined ? 'router' : arguments[1];
+      var reducerKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'router';
 
       var routerStateSelector = function routerStateSelector(state) {
           return state[reducerKey] || state.get && state.get(reducerKey);
@@ -337,10 +450,9 @@ var actions = Object.freeze({
       var lastReturnedValue = void 0;
 
       return function (state) {
-          var _routerStateSelector = routerStateSelector(state);
-
-          var route = _routerStateSelector.route;
-          var previousRoute = _routerStateSelector.previousRoute;
+          var _routerStateSelector = routerStateSelector(state),
+              route = _routerStateSelector.route,
+              previousRoute = _routerStateSelector.previousRoute;
 
           var intersection = route ? transitionPath(route, previousRoute).intersection : '';
 
