@@ -35,6 +35,7 @@
   },
   "homepage": "http://router5.github.com/router5/redux-router5",
   "devDependencies": {
+    "babel-cli": "^6.24.1",
     "babel-core": "~6.9.1",
     "babel-eslint": "~6.0.4",
     "babel-plugin-transform-export-extensions": "~6.8.0",
